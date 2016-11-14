@@ -7,11 +7,13 @@
 from pymongo.mongo_client import MongoClient
 
 from lushi_spider.items import MatchItem, CompeteItem
+from lushi_spider.settings import MONGODB_IP
 
 
 class LushiSpiderPipeline(object):
     def __init__(self):
-        connection = MongoClient('127.0.0.1', 27017)
+        mongodb_uri = 'mongodb://' + MONGODB_IP + ':27017/'
+        connection = MongoClient(mongodb_uri)
         db = connection['lushi']
         self.match_collection = db['match']
         self.compete_collection = db['compete']

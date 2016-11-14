@@ -17,7 +17,7 @@ class MatchSpider(CrawlSpider):
     current_page = 1
 
     def parse(self, response):
-        for match in Selector(response).xpath('//div[@id="col1"]//div[@class="content"][3]//tr'):
+        for match in Selector(response).xpath('//div[@id="col1"]//div[@class="content"]')[2].xpath('table/tbody/tr'):
             item = MatchItem()
             item['player_left'] = match.xpath('td/a/span[@class="opp opp1"]/span[1]/text()').extract()[0]
             item['player_right'] = match.xpath('td/a/span[@class="opp opp2"]/span[2]/text()').extract()[0]
@@ -29,8 +29,8 @@ class MatchSpider(CrawlSpider):
                           callback=self.parse_match)
         if self.current_page < total_page:
             self.current_page += 1
-            yield Request("http://www.gosugamers.net/hearthstone/gosubet?r-page=" + str(self.current_page),
-                          callback=self.parse)
+            # yield Request("http://www.gosugamers.net/hearthstone/gosubet?r-page=" + str(self.current_page),
+            #               callback=self.parse)
 
     def parse_match(self, response):
         for compete in Selector(response).xpath('//span[contains(@class,"match-game-tab")]'):
