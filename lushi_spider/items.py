@@ -15,11 +15,14 @@ class PlayerItem(scrapy.Item):
 
 class MatchItem(scrapy.Item):
     match_name = scrapy.Field()
-    player_left = scrapy.Field()
-    player_right = scrapy.Field()
+    left_player = scrapy.Field()
+    left_player_id = scrapy.Field()
+    right_player = scrapy.Field()
+    right_player_id = scrapy.Field()
 
 
 class CompeteItem(scrapy.Item):
-    job_left = scrapy.Field()
-    job_right = scrapy.Field()
+    match_name = scrapy.Field()
+    left_job = scrapy.Field()
+    right_job = scrapy.Field()
     winner = scrapy.Field()

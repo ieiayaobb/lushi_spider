@@ -4,7 +4,7 @@ from scrapy.contrib.spiders import CrawlSpider
 
 from lushi_spider.items import MatchItem, CompeteItem
 
-total_page = 212
+total_page = 10
 
 
 class MatchSpider(CrawlSpider):
@@ -19,9 +19,11 @@ class MatchSpider(CrawlSpider):
     def parse(self, response):
         for match in Selector(response).xpath('//div[@id="col1"]//div[@class="content"]')[2].xpath('table/tbody/tr'):
             item = MatchItem()
-            item['player_left'] = match.xpath('td/a/span[@class="opp opp1"]/span[1]/text()').extract()[0]
-            item['player_right'] = match.xpath('td/a/span[@class="opp opp2"]/span[2]/text()').extract()[0]
-
+            match_name = match.xpath('td/a[@class="match hover-background"]/@href').extract()[0].split("/")[3]
+            item['match_name'] = match_name
+            # item['match_name'] = match_name.replace('-', '_')
+            item['left_player'] = match.xpath('td/a/span[@class="opp opp1"]/span[1]/text()').extract()[0]
+            item['right_player'] = match.xpath('td/a/span[@class="opp opp2"]/span[2]/text()').extract()[0]
             yield item
 
             match_href = match.xpath('td/a/@href').extract()[0]
@@ -29,10 +31,12 @@ class MatchSpider(CrawlSpider):
                           callback=self.parse_match)
         if self.current_page < total_page:
             self.current_page += 1
-            # yield Request("http://www.gosugamers.net/hearthstone/gosubet?r-page=" + str(self.current_page),
-            #               callback=self.parse)
+            yield Request("http://www.gosugamers.net/hearthstone/gosubet?r-page=" + str(self.current_page),
+                          callback=self.parse)
 
     def parse_match(self, response):
+        # match_name = response.url.split("/")[5].replace('-', '_')
+        match_name = response.url.split("/")[5]
         for compete in Selector(response).xpath('//span[contains(@class,"match-game-tab")]'):
             if compete.xpath("input[@class='btn-winner']").__len__() > 0:
                 winner_text_field = compete.xpath("input[@class='btn-winner']/@value").extract()[0]
@@ -45,10 +49,11 @@ class MatchSpider(CrawlSpider):
                     item = CompeteItem()
                     if lineup_ele.xpath('//div[contains(@class, "opponent1Deck")]').__len__() > 0:
                         job1 = lineup_ele.xpath('//div[contains(@class, "opponent1Deck")]//img/@alt').extract()[0]
-                        item['job_left'] = job1
+                        item['left_job'] = job1
                     if lineup_ele.xpath('//div[contains(@class, "opponent2Deck")]').__len__() > 0:
                         job2 = lineup_ele.xpath('//div[contains(@class, "opponent2Deck")]//img/@alt').extract()[0]
-                        item['job_right'] = job2
+                        item['right_job'] = job2
 
                     item['winner'] = winner
+                    item['match_name'] = str(match_name)
                     return item

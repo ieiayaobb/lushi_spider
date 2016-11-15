@@ -16,12 +16,33 @@ class LushiSpiderPipeline(object):
         connection = MongoClient(mongodb_uri)
         db = connection['lushi']
         self.match_collection = db['match']
+        self.match_collection.ensure_index('match_name')
         self.compete_collection = db['compete']
+        self.compete_collection.ensure_index('match_id')
+        self.player_collection = db['player']
+        self.player_collection.ensure_index('player_name')
 
     def process_item(self, item, spider):
         mongo_item = dict(item)
         if isinstance(item, MatchItem):
+            left_player = item['left_player']
+            right_player = item['right_player']
+            if self.player_collection.count({'player_name': left_player}) == 0:
+                self.player_collection.insert({
+                    'player_name': left_player
+                })
+            left_player_id = self.player_collection.find_one({'player_name': left_player})['_id']
+            mongo_item['left_player_id'] = left_player_id
+
+            if self.player_collection.count({'player_name': right_player}) == 0:
+                self.player_collection.insert({
+                    'player_name': right_player
+                })
+            right_player_id = self.player_collection.find_one({'player_name': right_player})['_id']
+            mongo_item['right_player_id'] = right_player_id
             self.match_collection.insert(mongo_item)
         if isinstance(item, CompeteItem):
+            match_name = item['match_name'].decode('utf8')
+            mongo_item['match_id'] = self.match_collection.find_one({'match_name': match_name})['_id']
             self.compete_collection.insert(mongo_item)
         return item
