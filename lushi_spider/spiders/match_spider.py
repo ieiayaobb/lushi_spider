@@ -29,8 +29,8 @@ class MatchSpider(CrawlSpider):
                           callback=self.parse_match)
         if self.current_page < total_page:
             self.current_page += 1
-            # yield Request("http://www.gosugamers.net/hearthstone/gosubet?r-page=" + str(self.current_page),
-            #               callback=self.parse)
+            yield Request("http://www.gosugamers.net/hearthstone/gosubet?r-page=" + str(self.current_page),
+                          callback=self.parse)
 
     def parse_match(self, response):
         for compete in Selector(response).xpath('//span[contains(@class,"match-game-tab")]'):
