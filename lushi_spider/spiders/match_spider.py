@@ -4,7 +4,7 @@ from scrapy.contrib.spiders import CrawlSpider
 
 from lushi_spider.items import MatchItem, CompeteItem
 
-total_page = 10
+total_page = 212
 
 
 class MatchSpider(CrawlSpider):
