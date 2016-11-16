@@ -19,14 +19,16 @@ class MatchSpider(CrawlSpider):
     def parse(self, response):
         for match in Selector(response).xpath('//div[@id="col1"]//div[@class="content"]')[2].xpath('table/tbody/tr'):
             item = MatchItem()
-            match_name = match.xpath('td/a[@class="match hover-background"]/@href').extract()[0].split("/")[3]
+            match_href = match.xpath('td/a[@class="match hover-background"]/@href').extract()[0]
+            match_href_arr = match_href.split("/")
+            race_name = match_href_arr[3]
+            match_name = match_href_arr[7]
+            item['race_name'] = race_name
             item['match_name'] = match_name
-            # item['match_name'] = match_name.replace('-', '_')
             item['left_player'] = match.xpath('td/a/span[@class="opp opp1"]/span[1]/text()').extract()[0]
             item['right_player'] = match.xpath('td/a/span[@class="opp opp2"]/span[2]/text()').extract()[0]
             yield item
 
-            match_href = match.xpath('td/a/@href').extract()[0]
             yield Request("http://www.gosugamers.net" + match_href,
                           callback=self.parse_match)
         if self.current_page < total_page:
@@ -35,17 +37,16 @@ class MatchSpider(CrawlSpider):
                           callback=self.parse)
 
     def parse_match(self, response):
-        # match_name = response.url.split("/")[5].replace('-', '_')
-        match_name = response.url.split("/")[5]
+        match_name = response.url.split("/")[9]
         for compete in Selector(response).xpath('//span[contains(@class,"match-game-tab")]'):
             if compete.xpath("input[@class='btn-winner']").__len__() > 0:
                 winner_text_field = compete.xpath("input[@class='btn-winner']/@value").extract()[0]
                 winner = winner_text_field[8:]
 
-                match_id = compete.xpath("@id").extract()[0]
+                compete_id = compete.xpath("@id").extract()[0]
 
                 for lineup in Selector(response).xpath('//div[contains(@class,"lineups")]'):
-                    lineup_ele = lineup.xpath('div[contains(@class, "' + match_id + '")]')
+                    lineup_ele = lineup.xpath('div[contains(@class, "' + compete_id + '")]')
                     item = CompeteItem()
                     if lineup_ele.xpath('//div[contains(@class, "opponent1Deck")]').__len__() > 0:
                         job1 = lineup_ele.xpath('//div[contains(@class, "opponent1Deck")]//img/@alt').extract()[0]
@@ -56,4 +57,5 @@ class MatchSpider(CrawlSpider):
 
                     item['winner'] = winner
                     item['match_name'] = str(match_name)
+                    item['compete_id'] = str(compete_id)
                     return item
