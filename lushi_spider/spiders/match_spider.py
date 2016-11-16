@@ -1,3 +1,4 @@
+import exceptions
 from scrapy import Request
 from scrapy import Selector
 from scrapy.contrib.spiders import CrawlSpider
@@ -17,24 +18,28 @@ class MatchSpider(CrawlSpider):
     current_page = 1
 
     def parse(self, response):
-        for match in Selector(response).xpath('//div[@id="col1"]//div[@class="content"]')[2].xpath('table/tbody/tr'):
-            item = MatchItem()
-            match_href = match.xpath('td/a[@class="match hover-background"]/@href').extract()[0]
-            match_href_arr = match_href.split("/")
-            race_name = match_href_arr[3]
-            match_name = match_href_arr[7]
-            item['race_name'] = race_name
-            item['match_name'] = match_name
-            item['left_player'] = match.xpath('td/a/span[@class="opp opp1"]/span[1]/text()').extract()[0]
-            item['right_player'] = match.xpath('td/a/span[@class="opp opp2"]/span[2]/text()').extract()[0]
-            yield item
+        global match_href
+        try:
+            for match in Selector(response).xpath('//div[@id="col1"]//div[@class="content"]')[2].xpath('table/tbody/tr'):
+                item = MatchItem()
+                match_href = match.xpath('td/a[@class="match hover-background"]/@href').extract()[0]
+                match_href_arr = match_href.split("/")
+                race_name = match_href_arr[3]
+                match_name = match_href_arr[7]
+                item['race_name'] = race_name
+                item['match_name'] = match_name
+                item['left_player'] = match.xpath('td/a/span[@class="opp opp1"]/span[1]/text()').extract()[0]
+                item['right_player'] = match.xpath('td/a/span[@class="opp opp2"]/span[2]/text()').extract()[0]
+                yield item
 
-            yield Request("http://www.gosugamers.net" + match_href,
-                          callback=self.parse_match)
-        if self.current_page < total_page:
-            self.current_page += 1
-            yield Request("http://www.gosugamers.net/hearthstone/gosubet?r-page=" + str(self.current_page),
-                          callback=self.parse)
+                yield Request("http://www.gosugamers.net" + match_href,
+                              callback=self.parse_match)
+            if self.current_page < total_page:
+                self.current_page += 1
+                yield Request("http://www.gosugamers.net/hearthstone/gosubet?r-page=" + str(self.current_page),
+                              callback=self.parse)
+        except exceptions.IndexError:
+            print 'match_href == ' + match_href
 
     def parse_match(self, response):
         match_name = response.url.split("/")[9]
