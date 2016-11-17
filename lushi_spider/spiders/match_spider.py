@@ -45,7 +45,11 @@ class MatchSpider(CrawlSpider):
             print 'match_href == ' + match_href
 
     def parse_match(self, response):
-        match_name = response.url.split("/")[9]
+        match_href_arr = response.url.split("/")
+        if 9 in match_href_arr:
+            match_name = match_href_arr[9]
+        else:
+            match_name = match_href_arr[7]
         for compete in Selector(response).xpath('//span[contains(@class,"match-game-tab")]'):
             if compete.xpath("input[@class='btn-winner']").__len__() > 0:
                 winner_text_field = compete.xpath("input[@class='btn-winner']/@value").extract()[0]
