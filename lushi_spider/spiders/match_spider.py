@@ -25,7 +25,10 @@ class MatchSpider(CrawlSpider):
                 match_href = match.xpath('td/a[@class="match hover-background"]/@href').extract()[0]
                 match_href_arr = match_href.split("/")
                 race_name = match_href_arr[3]
-                match_name = match_href_arr[7]
+                if 7 in match_href_arr:
+                    match_name = match_href_arr[7]
+                else:
+                    match_name = match_href_arr[5]
                 item['race_name'] = race_name
                 item['match_name'] = match_name
                 item['left_player'] = match.xpath('td/a/span[@class="opp opp1"]/span[1]/text()').extract()[0]
